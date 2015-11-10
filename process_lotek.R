@@ -42,7 +42,7 @@ process_lotek = function(tag) {
     #note, we also subtract 1 day because Excel (Windows version, not Mac version) 
     #incorrectly believes that 1900 was a leap year
     #which it was not.  Datenum correctly calculates all the leap years.
-    dnum <- (ttime -1.0 + datenum("1900/1/1 00:00:00"))  + time_shift_hrs/24.;
+    dnum <- (ttime -1.0 + datenum("1899/12/31 00:00:00"))  + time_shift_hrs/24.;
     tag[["release_dnum"]] <- tag[["release_dnum"]] + time_shift_hrs/24.;
     tag[["recapture_dnum"]] <- tag[["recapture_dnum"]] + time_shift_hrs/24.;
     
