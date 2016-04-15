@@ -9,7 +9,7 @@ Required imput data include meta tagging information from an Excel spreadsheet a
 
 3. In `process_tags.R`, specify the tags you desire to process by assigning corresponding list of tag IDs to the `ptags` variable.
 
-4. The processed tags will be stored in .mat format in `processed_tags` folder.
+4. Run `process_tags.R`. The processed tags will be stored in .mat format in `processed_tags` folder.
 
 # Dependencies
 * [gdata](https://cran.r-project.org/web/packages/gdata/index.html)
