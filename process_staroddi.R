@@ -1,4 +1,25 @@
-process_lotek = function(tag) {
+process_staroddi = function(tag) {
+# Read raw tag data and generate a Matlab file containing all information 
+#
+# tag = process_staroddi(tag)
+#
+# DESCRIPTION:
+#    Read raw tag data and dump to matlab file for tag
+#
+# INPUT 
+#   tag  = tag metadata in R list datatype  
+#   
+#
+# OUTPUT:
+#   matlab file containing tag data + metadata in standardized format 
+#   where time series are standardized to GMT.
+#
+# EXAMPLE USAGE
+#    tag = process_staroddi(tag) 
+#
+# Author(s):  
+#    Chang Liu (University of Massachusetts Dartmouth)  
+#    based on a Matlab code authored by Geoff Cowles
   
   # set parameters
   depth_cutoff <- 10.  #time series doesn't start until depth exceeds this value
@@ -7,28 +28,27 @@ process_lotek = function(tag) {
   #is not in the water
   
   print(paste("Processing tag #", tag[["fish_id"]], "..."))
-
   # make sure the tagfile exists
   if(file.exists(tag[["datafile"]])){
+    datetime = as.POSIXct(paste(mydata[,2], mydata[,3]),format = "%d.%m.%y %H:%M:%S")
+    temp <- as.numeric(as.character(mydata[,4])) 
+    depth <- as.numeric(as.character(mydata[,5])) 
     
-    nheader <- 5 # number of lines to skip
-    mydata = read.table(tag[["datafile"]],skip=nheader,header=FALSE)
-    ttime <- mydata[,1]
-    temp <- mydata[,2]
-    depth <- mydata[,3]
-    
-    # convert from psi to depth
-    depth <- 1/(1.4504) * depth
+    # spline interpolate missing values if necessary
+    if(any(is.na(temp))){
+      cz = temp
+      temp = na.spline(cz)
+    }
+    if(any(is.na(depth))){
+      cz = depth
+      depth = na.spline(cz)
+    }
     
     # convert time to Matlab/GMT
-    ntimes <- length(ttime)
-    
+    ntimes <- length(datetime)
     
     tag[["process_date"]] <- strftime(Sys.time())
-    
-    # convert time to Matlab/GMT
-    #ntimes <- numel(ttime);
-    
+
     if(tag[["tzone"]]=="UTC"){
       time_shift_hrs <- 0.0
     } else if(tag[["tzone"]]=="EDT"){
@@ -39,12 +59,8 @@ process_lotek = function(tag) {
       print(paste("tag time zone is",tag[["tzone"]]))
       print("not setup to shift from that time zone")
     }
-    #smast-preprocessed tags, note time is shifted from excel time (days since 1900,1,0,0,0,0)
-    #into the datenum time (days since 0000,1,0,0,0,0).  
-    #note, we also subtract 1 day because Excel (Windows version, not Mac version) 
-    #incorrectly believes that 1900 was a leap year
-    #which it was not.  Datenum correctly calculates all the leap years.
-    dnum <- (ttime -1.0 + datenum("1899/12/31 00:00:00"))  + time_shift_hrs/24.
+    
+    dnum = POSIXt2matlab(datetime) + time_shift_hrs/24.
     tag[["release_dnum"]] <- tag[["release_dnum"]] + time_shift_hrs/24.
     tag[["recapture_dnum"]] <- tag[["recapture_dnum"]] + time_shift_hrs/24.
     print(paste("Logged fish release time: ",matlab2POS(tag[["release_dnum"]])))
@@ -66,7 +82,7 @@ process_lotek = function(tag) {
     
     print(paste("fish in water at",matlab2POS(tag[["dnum"]][1])))
     print(paste("fish recaptured at",matlab2POS(tail(tag[["dnum"]],n=1))))
-   
+    
     # check the time interval 
     tag[["min_intvl_seconds"]] = min(diff(tag[["dnum"]]))*3600*24
     tag[["max_intvl_seconds"]] = max(diff(tag[["dnum"]]))*3600*24
@@ -76,6 +92,8 @@ process_lotek = function(tag) {
     plot(tag[["dnum"]],tag[["depth"]],type="l",ylim = rev(range(tag[["depth"]])), col="blue")
     title(paste(tag[["fish_id"]],"_",tag[["tag_id"]]))
     plot(tag[["dnum"]],tag[["temp"]],type="l", col="red")
+  
+  
   }
   return(tag)
 }
