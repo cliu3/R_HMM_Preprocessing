@@ -1,7 +1,7 @@
 process_lotek = function(tag) {
   
   # set parameters
-  depth_cutoff <- 10.  #time series doesn't start until depth exceeds this value
+  depth_cutoff <- 5.  #time series doesn't start until depth exceeds this value
   #time series ends last time depth is less than this value
   #this is used to trim data from the tag where the fish 
   #is not in the water
@@ -48,7 +48,7 @@ process_lotek = function(tag) {
     tag[["release_dnum"]] <- tag[["release_dnum"]] + time_shift_hrs/24.
     tag[["recapture_dnum"]] <- tag[["recapture_dnum"]] + time_shift_hrs/24.
     print(paste("Logged fish release time: ",matlab2POS(tag[["release_dnum"]])))
-    print(paste("Logged fish recapture time: ",matlab2POS(tag[["recapture_dnum"]])))
+    print(paste("Logged fish recapture date: ",matlab2POS(tag[["recapture_dnum"]])))
     
     print(paste("tag turned on at",matlab2POS(dnum[1])))
     
@@ -59,9 +59,13 @@ process_lotek = function(tag) {
     tag[["temp_raw"]] <- temp
     tag[["depth_raw"]] <- depth
     
-    tag[["dnum"]] <- dnum[depth > depth_cutoff]
-    tag[["temp"]] <- temp[depth > depth_cutoff]
-    tag[["depth"]] <- depth[depth > depth_cutoff]
+    # use rle to refine the range of "good" signal, by choosing the longest series where depth is greater than the cut_off 
+    # code from Stackoverflow question: http://stackoverflow.com/questions/37447114/find-the-longest-continuous-chunk-of-true-in-a-boolean-vector 
+    idx <- with(rle(depth > depth_cutoff), rep(lengths == max(lengths[values]) & values, lengths))
+    
+    tag[["dnum"]] <- dnum[idx]
+    tag[["temp"]] <- temp[idx]
+    tag[["depth"]] <- depth[idx]
     tag[["days_at_large"]] <- ceiling(tag[["dnum"]][length(tag[["dnum"]])]-tag[["dnum"]][1])
     
     print(paste("fish in water at",matlab2POS(tag[["dnum"]][1])))

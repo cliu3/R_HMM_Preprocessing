@@ -30,6 +30,10 @@ process_staroddi = function(tag) {
   print(paste("Processing tag #", tag[["fish_id"]], "..."))
   # make sure the tagfile exists
   if(file.exists(tag[["datafile"]])){
+    
+    nheader <- 14 # number of lines to skip
+    mydata = read.table(tag[["datafile"]],skip=nheader,header=FALSE)
+    
     datetime = as.POSIXct(paste(mydata[,2], mydata[,3]),format = "%d.%m.%y %H:%M:%S")
     temp <- as.numeric(as.character(mydata[,4])) 
     depth <- as.numeric(as.character(mydata[,5])) 
@@ -64,7 +68,7 @@ process_staroddi = function(tag) {
     tag[["release_dnum"]] <- tag[["release_dnum"]] + time_shift_hrs/24.
     tag[["recapture_dnum"]] <- tag[["recapture_dnum"]] + time_shift_hrs/24.
     print(paste("Logged fish release time: ",matlab2POS(tag[["release_dnum"]])))
-    print(paste("Logged fish recapture time: ",matlab2POS(tag[["recapture_dnum"]])))
+    print(paste("Logged fish recapture date: ",matlab2POS(tag[["recapture_dnum"]])))
     
     print(paste("tag turned on at",matlab2POS(dnum[1])))
     
@@ -75,9 +79,13 @@ process_staroddi = function(tag) {
     tag[["temp_raw"]] <- temp
     tag[["depth_raw"]] <- depth
     
-    tag[["dnum"]] <- dnum[depth > depth_cutoff]
-    tag[["temp"]] <- temp[depth > depth_cutoff]
-    tag[["depth"]] <- depth[depth > depth_cutoff]
+    # use rle to refine the range of "good" signal, by choosing the longest series where depth is greater than the cut_off 
+    # code from Stackoverflow question: http://stackoverflow.com/questions/37447114/find-the-longest-continuous-chunk-of-true-in-a-boolean-vector 
+    idx <- with(rle(depth > depth_cutoff), rep(lengths == max(lengths[values]) & values, lengths))
+    
+    tag[["dnum"]] <- dnum[idx]
+    tag[["temp"]] <- temp[idx]
+    tag[["depth"]] <- depth[idx]
     tag[["days_at_large"]] <- ceiling(tag[["dnum"]][length(tag[["dnum"]])]-tag[["dnum"]][1])
     
     print(paste("fish in water at",matlab2POS(tag[["dnum"]][1])))

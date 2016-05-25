@@ -14,7 +14,7 @@ outdir <- "processed_tags"
 df <- read.xls("Inventory of non-SCCZ cod DSTs_2-18-16.xlsx",stringsAsFactors=FALSE)
 #df[] <- lapply(df, as.character)
 
-ptags <- 101:105;
+ptags <- 130;
 
 for(i in ptags)
   #i <- 1
@@ -31,16 +31,16 @@ for(i in ptags)
   tag[["fish_id"]]   <- df[i,"FISH.ID.."]
   tag[["tag_id"]]    <- df[i,"DST.."]
   tag[["type"]]      <- df[i,"DST.TYPE"]
-  tag[["length"]]    <- df[i,"TAG_LONG"]
+  tag[["length"]]    <- df[i,"LENGTH..CM."]
   tag[["sex"]]       <- df[i,"SEX"]
   tag[["maturity"]]  <- df[i,"MATURITY"]
   tag[["release_dnum"]] <- datenum(paste(df[i,"DATE.TAGGED"],df[i,"RELEASE.TIME."]))
-  tag[["release_lon"]] <- df[i,"TAG_LONG"]
-  tag[["release_lat"]] <- df[i,"TAG_LAT"]
-  tag[["recapture_lon"]] <- df[i,"RECAP_LONG"]
-  tag[["recapture_lat"]] <- df[i,"RECAP_LAT"]
+  tag[["release_lon"]] <- as.numeric(df[i,"TAG_LONG"])
+  tag[["release_lat"]] <- as.numeric(df[i,"TAG_LAT"])
+  tag[["recapture_lon"]] <- as.numeric(df[i,"RECAP_LONG"])
+  tag[["recapture_lat"]] <- as.numeric(df[i,"RECAP_LAT"])
   tag[["recapture_dnum"]] <- datenum(df[i,"DATE.RECAPTURED"])
-  tag[["recap_uncertainty_km"]] <- df[i,"RECAP.UNCERTAINTY_DISTANCE..Km."] 
+  tag[["recap_uncertainty_km"]] <- as.numeric(df[i,"RECAP.UNCERTAINTY_DISTANCE..Km."])
   
   
   #set time-dependent fields
