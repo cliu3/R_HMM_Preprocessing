@@ -22,7 +22,7 @@ process_staroddi = function(tag) {
 #    based on a Matlab code authored by Geoff Cowles
   
   # set parameters
-  depth_cutoff <- 10.  #time series doesn't start until depth exceeds this value
+  depth_cutoff <- 4.  #time series doesn't start until depth exceeds this value
   #time series ends last time depth is less than this value
   #this is used to trim data from the tag where the fish 
   #is not in the water
@@ -35,8 +35,11 @@ process_staroddi = function(tag) {
     mydata = read.table(tag[["datafile"]],skip=nheader,header=FALSE)
     
     datetime = as.POSIXct(paste(mydata[,2], mydata[,3]),format = "%d.%m.%y %H:%M:%S")
-    temp <- as.numeric(as.character(mydata[,4])) 
-    depth <- as.numeric(as.character(mydata[,5])) 
+    # deal with decimal comma
+    temp <- as.numeric(sub(",", ".", mydata[,4], fixed = TRUE)) 
+    depth <- as.numeric(sub(",", ".", mydata[,5], fixed = TRUE)) 
+    
+
     
     # spline interpolate missing values if necessary
     if(any(is.na(temp))){
